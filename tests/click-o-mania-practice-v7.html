@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en"> 
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+ </head>
+<body>
+
+<script type="text/javascript">
+
+
+//click-o-mania
+
+var input1=
+`20 10 2
+BRBBBBRRBB
+RBRBBRRRRR
+BRBBRRRBBB
+BRRRBBBRBR
+BBBBRBRRBR
+BRBRRBRRRB
+BBRBRBRBBB
+RBRBRBRRBR
+BRRRRRBBRB
+RRRRBRRRRB
+BRRRBBBRBR
+RRBRRBBBRB
+RBBBBBBBBB
+BRBBRBRBBR
+RBRBBBRRRB
+RBRBRBRBBB
+BRRRBRBRRR
+RRBRBBBBBR
+RBBRBBRBRB
+BBBBRRBBRB`;
+
+var input2 =
+`20 10 3
+BBRBYBBRRB
+YBYBYBRRBB
+YYRRYYYBBB
+YRRRYRBBBB
+RRRYYBYYYR
+YBBYYRYYBB
+RRYRYYBRBY
+RRRRYRYYRY
+BRRYYRRYYB
+RRYRBBBRRY
+RBYBYRYYRR
+BYBYYBRYBY
+BRRBRYRYRB
+RBYRRYBYYY
+BRYYRYRRBY
+BRRYYBYRBY
+YBYYBYBBYB
+RBYYRRYBRB
+BYYBYYRBYB
+YBRBYYRRRR`;
+
+var input3=
+`20 10 5
+OBYRORBYGB
+YYRGOBRBYB
+BOYGYRYOYR
+GYYOGYOBBY
+GOBGGYOGRR
+OBBRBOYRBB
+RRGYBRBGOY
+GRYRGYGGOR
+YOBOOGOBGG
+YRBOGYBBGG
+RRGOYBYYYY
+YBBRBBRGGG
+RGBYYBBRGY
+YBYOBRBOGG
+OBYGOGROOR
+RGBOORBBBR
+GOGOBRORGG
+GGYBOBYRGB
+YBYORYGBOR
+GYROOOOBOG`;
+
+var input4 =
+`20 10 6
+BGOBVBGROB
+YBYBVGRRGG
+VYOOYYYBBB
+VRRRVOBGBG
+OOOVYBYYVR
+VGBYYOYYGB
+OOYOYVGOBV
+ROROYOYYOY
+BRRYYROVYB
+RRYRBGGRRV
+OGYGVOVYOR
+GYBYYBOVGV
+GOOBOVOVOB
+OGVORVGVVY
+GOYVOVRRGV
+GORVYBYOBV
+VGYYBYBGYG
+RGVYOOVBOG
+GVVGVVRBYB
+VBOBYYOORO`;
+
+var input5 =
+`20 10 3
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+BBB-------`;
+
+var input6 =
+`20 10 5
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+----------
+O---------
+Y---------
+G----R----
+R----Y----
+O----R----
+R----B----
+YO-O-Y----
+GYRBBR----`;
+
+
+processData(input3);
+
+
+
+function processData(input) {
+    let lines = input.split('\n');
+	let firstLine = lines[0].split(" ");
+    let numRows = parseInt(firstLine[0]);
+	let numColumns = parseInt(firstLine[1]);
+	let numColors = parseInt(firstLine[2]);
+	let grid = [];
+	let solution = [];
+	let solution2 = [];
+	
+	for (let i = 1; i <= numRows; ++i) {
+		let oneRow = []
+		for (let j = 0; j < numColumns; j++) {
+            oneRow.push(lines[i][j]);
+		}
+		grid.push(oneRow);
+    }
+	//console.log("grid");
+	//console.log(grid);
+
+	let interimGrid = grid.slice();
+	let Signal;
+	let Signal2;
+	
+	let maxIteration = 1500;
+	let maxSearch = 2;   //numColors + 2;  //2;
+	
+	//if (randInt(2) === 5) {
+	//	[solution, Signal] = lowestColumnSolver(numRows,numColumns,numColors,interimGrid,maxIteration,maxSearch);
+	//} else {
+	//	[solution, Signal] = completeSolver(numRows,numColumns,numColors,interimGrid,maxIteration,maxSearch);
+	//}
+	
+	//[solution, Signal] = minimumGroupSolver(numRows,numColumns,numColors,interimGrid,maxIteration,maxSearch);
+	
+	[solution, Signal] = completeSolver(numRows,numColumns,numColors,interimGrid,maxIteration,maxSearch);
+	//console.log(solution);
+	//console.log(Signal);
+	nextMove(solution);											// print the first step of one solution.
+} 
+
+function nextMove(solution) {
+	console.log(solution[0][0],solution[0][1]);
+}
+
+//attach the lowest column and around it first.
+function lowestColumnSolver(numRows,numColumns,numColors,interimGrid,maxIteration,maxSearch) {
+
+	const MAX_ITERATION = maxIteration;
+	const MAX_OF_MAX_SEQ_SEARCH = maxSearch;
+	
+	let Solved = false;
+	let count = 0;
+	
+	let uniqueEligiblePoints = [];
+	let solSeq = [];      // n by m by 2 array.  e.g. [ [ p1,p2 ], [p2, p3, p6], [p2, p4, p5, p7, p8 ], ... ,[ p14, p2, p3, p7,] ] and each p is [x1, y1] array.
+	let matchingGrid = [];  // n by m by (n by m) array. e.g. [ [m1, m2], [m2, m3, m6], ... [m14, m2, m3, m7] ] and each m is (n by m) array for grid.
+	
+	let longestTriedSolution = [];
+	let longestTriedGrid = [];
+	
+	let deletedSolSeq = [];
+	let deletedMatchingGrid = [];
+	
+	uniqueEligiblePoints = findAllEligibleUniquePoints(numRows,numColumns,interimGrid);
+
+	//console.log("uniqueEligiblePoints.length A");
+	//console.log(uniqueEligiblePoints.length);
+	
+	if (uniqueEligiblePoints.length === 0) {
+		//console.log(matchingGrid[matchingGrid.length - 1]);
+		//console.log("location A");
+		return "No Solution A"
+	}
+	//update SolSeq
+	
+	for (let i = 0; i < uniqueEligiblePoints.length; i++) {
+		solSeq.push([uniqueEligiblePoints[i][0],uniqueEligiblePoints[i][1]]);
+	}
+
+	for (let i = 0; i < uniqueEligiblePoints.length; i++) {
+		let nextGrid = [];
+		nextGrid = oneIteration(uniqueEligiblePoints[i][0],uniqueEligiblePoints[i][1],numRows,numColumns,numColors,interimGrid);
+		matchingGrid.push(nextGrid);      	//update matchingGrid
+	}
+	
+	longestTriedSolution = solSeq[0];
+	longestTriedGrid = matchingGrid[0];
+	
+	while (!Solved && count <= MAX_ITERATION) {
+	
+		MAX_SEQ_SEARCH = MAX_OF_MAX_SEQ_SEARCH; //randInt(MAX_OF_MAX_SEQ_SEARCH) + 1;   // randomly select the max search for each iteration
+		count++;
+		//console.log("count: ", count);
+
+		//check if solved.
+		for (let i = 0; i < matchingGrid.length; i++) {
+
+			if(isSolved(numRows,numColumns,matchingGrid[i])) {
+				
+				//console.log("solved");
+		
+				Solved = true;
+				return [[solSeq[i]], "Sucess"];          // return the first point in the solution sequence.
+			}
+		}
+		//console.log("location w-1, count: ", count);
+		//not solved yet.
+		
+		//delete one from SolSeq and matchingGrid if grid is not solvable.
+		indexNotSolvable = [];
+		for (let i = 0; i < matchingGrid.length; i++) {
+			if (NotSolvable(numRows,numColumns,matchingGrid[i],numColors)) {
+				indexNotSolvable.push(i);
+			}
+		}
+			
+		if (count !== 1) {
+			for (let i = indexNotSolvable.length - 1; i >=0; i--) {
+				solSeq.splice(i,1);
+				matchingGrid.splice(i,1);
+			}
+		}
+		
+		if (solSeq.length === 0) {
+			//console.log("No Solution 1. Adding back deleted solSeq and matchingGrid");
+			solSeq = [];
+			matchingGrid = [];
+			solSeq = deletedSolSeq.splice(0,MAX_SEQ_SEARCH);
+			matchingGrid = deletedMatchingGrid.splice(0,MAX_SEQ_SEARCH);
+			
+			//return "No Solution 1";
+		}
+
+		prevMatchGridLength = matchingGrid.length;
+		
+		if (prevMatchGridLength > MAX_SEQ_SEARCH) {
+			let currentlyDeletedSolSeq = arrayDeepCopy(solSeq.length,solSeq[0].length,solSeq);
+			currentlyDeletedSolSeq = currentlyDeletedSolSeq.slice(MAX_SEQ_SEARCH,prevMatchGridLength);
+			deletedSolSeq.push(...currentlyDeletedSolSeq);
+			
+			let currentlyDeletedMatchingGrid = arrayDeepCopy(matchingGrid.length,matchingGrid[0].length,matchingGrid);
+			currentlyDeletedMatchingGrid = currentlyDeletedMatchingGrid.slice(MAX_SEQ_SEARCH,prevMatchGridLength);
+			deletedMatchingGrid.push(...currentlyDeletedMatchingGrid);
+		}
+		
+		let newUniqueEligiblePoints = [];
+		
+		let totalNumNewUniqueEligiblePoints = 0;
+		for (let i = 0; i < Math.min(prevMatchGridLength,MAX_SEQ_SEARCH); i++) {    //find nextGrid for up to MAX_SEQ_SEARCH.
+			
+			newUniqueEligiblePoints = findAllEligibleUniquePoints(numRows,numColumns,matchingGrid[i]);
+			totalNumNewUniqueEligiblePoints += newUniqueEligiblePoints.length;
+
+			
+			//get newSeq and newGrid
+			let newSeq = [];
+			let newGrid = [];
+			let tempSeq = [];
+			for (let j = 0; j < newUniqueEligiblePoints.length; j++) {
+				newSeq.push([...solSeq[i],newUniqueEligiblePoints[j]]);
+				let nextGridForNewSeq = oneIteration(newUniqueEligiblePoints[j][0],newUniqueEligiblePoints[j][1],numRows,numColumns,numColors,matchingGrid[i]);
+				newGrid.push(nextGridForNewSeq);
+			}
+					
+			if (count <= 3) {
+				solSeq.push(...newSeq);
+				matchingGrid.push(...newGrid);
+			} else {
+			
+				//add to solSeq and matchingGrid to the back
+				let lowestColumn = findLowestColumn(numRows,numColumns,matchingGrid[i]);
+				let lowestColumnGroup = [];
+				if (lowestColumn === 0) {
+					lowestColumnGroup = [1,2];
+				} else if (lowestColumn === numColumns - 1) {
+					lowestColumnGroup = [numColumns - 2,numColumns - 1];
+				} else {
+					lowestColumnGroup = [lowestColumn - 1, lowestColumn, lowestColumn +1];
+				}
+				
+				for (let i = 0; i < newSeq.length; i++) {
+					if ( lowestColumnGroup.includes(newSeq[i][newSeq[i].length - 1][1]) ) {   //match column to lowestColumnGroup.
+						solSeq.push(newSeq[i]);
+						matchingGrid.push(newGrid[i]);
+						tempSeq.push(newSeq[i]);
+					}
+				}
+				// if no solution to use lowestColumnGroup, use usual newSeq.
+				if (tempSeq.length === 0) {
+					solSeq.push(...newSeq);
+					matchingGrid.push(...newGrid);
+				} else {
+					newSeq = tempSeq;
+				}
+			}
+			
+			if (newSeq !== []) {
+				if (longestTriedSolution.length < solSeq[solSeq.length - 1].length) {
+					longestTriedSolution = solSeq[solSeq.length - 1];
+					longestTriedGrid = matchingGrid[solSeq.length - 1];
+					//console.log(longestTriedSolution);
+				}
+			}
+		}
+
+		//stop if no points were added to solSeq.
+		
+		if (deletedSolSeq.length === 0 && totalNumNewUniqueEligiblePoints === 0) {
+			return [[longestTriedSolution], "Fail"];
+		}
+		
+		//delete prev item from SolSeq and matchingGrid from front
+		solSeq.splice(0,prevMatchGridLength);
+		matchingGrid.splice(0,prevMatchGridLength);
+		//}
+		
+		//eliminate the same matchingGrid
+		let indexToEliminate = [];
+		indexToEliminate = findIndexOfDuplicateGrids(numRows,numColumns,matchingGrid);
+		// console.log("indexToEliminate");
+		// console.log(indexToEliminate);
+		
+		for (let i = indexToEliminate.length - 1; i>=0; i--) {
+			solSeq.splice(i,1);
+			matchingGrid.splice(i,1);
+		}
+		
+	}
+	//console.log(longestTriedGrid);
+	return [[longestTriedSolution], "Fail"];		
+}
+
+
+
+// go through all the possibililities.
+function completeSolver(numRows,numColumns,numColors,interimGrid,maxIteration,maxSearch) {
+
+	const MAX_ITERATION = maxIteration;
+	const MAX_OF_MAX_SEQ_SEARCH = maxSearch;
+	
+	let Solved = false;
+	let count = 0;
+	
+	let uniqueEligiblePoints = [];
+	let solSeq = [];      // n by m by 2 array.  e.g. [ [ p1,p2 ], [p2, p3, p6], [p2, p4, p5, p7, p8 ], ... ,[ p14, p2, p3, p7,] ] and each p is [x1, y1] array.
+	let matchingGrid = [];  // n by m by (n by m) array. e.g. [ [m1, m2], [m2, m3, m6], ... [m14, m2, m3, m7] ] and each m is (n by m) array for grid.
+	
+	let longestTriedSolution = [];
+	let longestTriedGrid = [];
+	
+	let deletedSolSeq = [];
+	let deletedMatchingGrid = [];
+	
+	uniqueEligiblePoints = findAllEligibleUniquePoints(numRows,numColumns,interimGrid);
+
+	//console.log("uniqueEligiblePoints.length A");
+	//console.log(uniqueEligiblePoints.length);
+	
+	if (uniqueEligiblePoints.length === 0) {
+		//console.log(matchingGrid[matchingGrid.length - 1]);
+		//console.log("location A");
+		return "No Solution A"
+	}
+	//update SolSeq
+	
+	for (let i = 0; i < uniqueEligiblePoints.length; i++) {
+		solSeq.push([uniqueEligiblePoints[i][0],uniqueEligiblePoints[i][1]]);
+	}
+
+	for (let i = 0; i < uniqueEligiblePoints.length; i++) {
+		let nextGrid = [];
+		nextGrid = oneIteration(uniqueEligiblePoints[i][0],uniqueEligiblePoints[i][1],numRows,numColumns,numColors,interimGrid);
+		matchingGrid.push(nextGrid);      	//update matchingGrid
+	}
+	
+	longestTriedSolution = solSeq[0];
+	longestTriedGrid = matchingGrid[0];
+	
+	while (!Solved && count <= MAX_ITERATION) {
+	
+		MAX_SEQ_SEARCH = randInt(MAX_OF_MAX_SEQ_SEARCH) + 1;   // randomly select the max search for each iteration
+		count++;
+		//console.log("count: ", count);
+
+		//check if solved.
+		for (let i = 0; i < matchingGrid.length; i++) {
+
+			if(isSolved(numRows,numColumns,matchingGrid[i])) {
+				
+				//console.log("solved");
+		
+				Solved = true;
+				return [[solSeq[i]], "Sucess"];          // return the first point in the solution sequence.
+			}
+		}
+		//console.log("location w-1, count: ", count);
+		//not solved yet.
+		
+		//delete one from SolSeq and matchingGrid if grid is not solvable.
+		indexNotSolvable = [];
+		for (let i = 0; i < matchingGrid.length; i++) {
+			if (NotSolvable(numRows,numColumns,matchingGrid[i],numColors)) {
+				indexNotSolvable.push(i);
+			}
+		}
+			
+		if (count !== 1) {
+			for (let i = indexNotSolvable.length - 1; i >=0; i--) {
+				solSeq.splice(i,1);
+				matchingGrid.splice(i,1);
+			}
+		}
+		
+		if (solSeq.length === 0) {
+			//console.log("No Solution 1. Adding back deleted solSeq and matchingGrid");
+			solSeq = [];
+			matchingGrid = [];
+			solSeq = deletedSolSeq.splice(0,MAX_SEQ_SEARCH);
+			matchingGrid = deletedMatchingGrid.splice(0,MAX_SEQ_SEARCH);
+			
+			//return "No Solution 1";
+		}
+
+		prevMatchGridLength = matchingGrid.length;
+		
+		if (prevMatchGridLength > MAX_SEQ_SEARCH) {
+			let currentlyDeletedSolSeq = arrayDeepCopy(solSeq.length,solSeq[0].length,solSeq);
+			currentlyDeletedSolSeq = currentlyDeletedSolSeq.slice(MAX_SEQ_SEARCH,prevMatchGridLength);
+			deletedSolSeq.push(...currentlyDeletedSolSeq);
+			
+			let currentlyDeletedMatchingGrid = arrayDeepCopy(matchingGrid.length,matchingGrid[0].length,matchingGrid);
+			currentlyDeletedMatchingGrid = currentlyDeletedMatchingGrid.slice(MAX_SEQ_SEARCH,prevMatchGridLength);
+			deletedMatchingGrid.push(...currentlyDeletedMatchingGrid);
+		}
+		
+		let newUniqueEligiblePoints = [];
+		
+		let totalNumNewUniqueEligiblePoints = 0;
+		for (let i = 0; i < Math.min(prevMatchGridLength,MAX_SEQ_SEARCH); i++) {    //find nextGrid for up to MAX_SEQ_SEARCH.
+			
+			newUniqueEligiblePoints = findAllEligibleUniquePoints(numRows,numColumns,matchingGrid[i]);
+			totalNumNewUniqueEligiblePoints += newUniqueEligiblePoints.length;
+
+			//move minimumGroupPoint to the front
+			let minimumGroupPoint = findNextPointMinimumGroupsLevelOne(numRows,numColumns,numColors,matchingGrid[i]);
+			if (minimumGroupPoint.length !== 0) {
+				newUniqueEligiblePoints.unshift(minimumGroupPoint);
+			}
+			//get newSeq and newGrid
+			let newSeq = [];
+			let newGrid = [];
+			for (let j = 0; j < newUniqueEligiblePoints.length; j++) {
+				newSeq.push([...solSeq[i],newUniqueEligiblePoints[j]]);
+				let nextGridForNewSeq = oneIteration(newUniqueEligiblePoints[j][0],newUniqueEligiblePoints[j][1],numRows,numColumns,numColors,matchingGrid[i]);
+				newGrid.push(nextGridForNewSeq);
+			}
+			//add to solSeq and matchingGrid to the back
+			solSeq.push(...newSeq);
+			matchingGrid.push(...newGrid);
+			
+			if (newSeq !== []) {
+				if (longestTriedSolution.length < solSeq[solSeq.length - 1].length) {
+					longestTriedSolution = solSeq[solSeq.length - 1];
+					longestTriedGrid = matchingGrid[solSeq.length - 1];
+					//console.log(longestTriedSolution);
+				}
+			}
+		}
+		
+		//stop if no points were added to solSeq.
+		
+		if (deletedSolSeq.length === 0 && totalNumNewUniqueEligiblePoints === 0) {
+			return [[longestTriedSolution], "Fail"];
+		}
+		
+		//delete prev item from SolSeq and matchingGrid from front
+		solSeq.splice(0,prevMatchGridLength);
+		matchingGrid.splice(0,prevMatchGridLength);
+		//}
+		
+		//eliminate the same matchingGrid
+		let indexToEliminate = [];
+		indexToEliminate = findIndexOfDuplicateGrids(numRows,numColumns,matchingGrid);
+		// console.log("indexToEliminate");
+		// console.log(indexToEliminate);
+		
+		for (let i = indexToEliminate.length - 1; i>=0; i--) {
+			solSeq.splice(i,1);
+			matchingGrid.splice(i,1);
+		}
+
+	}
+	//console.log(longestTriedGrid);
+	return [[longestTriedSolution], "Fail"];
+}
+
+
+function minimumGroupSolver(numRows,numColumns,numColors,interimGrid,maxIteration,maxSearch) {
+	const MAX_ITERATION = maxIteration;
+	const MAX_OF_MAX_SEQ_SEARCH = maxSearch;
+	
+	let Solved = false;
+	let count = 0;
+	
+	let uniqueEligiblePoints = [];
+	let solSeq = [];      // n by m by 2 array.  e.g. [ [ p1,p2 ], [p2, p3, p6], [p2, p4, p5, p7, p8 ], ... ,[ p14, p2, p3, p7,] ] and each p is [x1, y1] array.
+	let matchingGrid = [];  // n by m by (n by m) array. e.g. [ [m1, m2], [m2, m3, m6], ... [m14, m2, m3, m7] ] and each m is (n by m) array for grid.
+	
+	matchingGrid.push(interimGrid);
+	
+	let longestTriedSolution = [];
+	let longestTriedGrid = [];
+	
+	let deletedSolSeq = [];
+	let deletedMatchingGrid = [];
+
+	
+	while ( !Solved && count <= MAX_ITERATION ) {
+		count++;
+		//console.log(count);
+		if (count === 1) {
+			uniqueEligiblePoints = findAllEligibleUniquePoints(numRows,numColumns,interimGrid);
+			//console.log(uniqueEligiblePoints);
+			if( isSolved(numRows,numColumns,interimGrid) ) {
+				return [ [uniqueEligiblePoints[0]], "Sucess" ];
+			} 
+		}
+		//console.log(matchingGrid);
+		//solved
+		if( isSolved(numRows,numColumns,matchingGrid[0]) ) {
+			return [solSeq[0], "Sucess"];
+		}
+		
+		let nextPoint1 = findNextPointMinimumGroupsLevelOne( numRows,numColumns,numColors,matchingGrid[0]);
+		console.log(nextPoint1);
+		if (count ===1) {
+			solSeq[0] = [nextPoint1];
+		} else {
+			solSeq[0] = [...solSeq[0],nextPoint1];
+		}
+		
+		matchingGrid[0] = oneIteration( nextPoint1[0],nextPoint1[1],numRows,numColumns,numColors,matchingGrid[0]);
+		
+		if (longestTriedSolution.length === solSeq[0].length) {
+			return [[longestTriedSolution], "Fail"];
+		}
+		
+
+		longestTriedSolution = solSeq;
+		longestTriedGrid = matchingGrid;
+		
+	}
+	//not solvable
+	return [[longestTriedSolution], "Fail"];
+}
+
+
+
+
+
+// find next point to get the minimum number of groups of contiguous points after one step forward.
+function findNextPointMinimumGroupsLevelOne(numRows,numColumns,numColors,interimGrid) {     //assume interimGrid is a solvable grid and is not solved yet.
+	let nextPoint = [];
+	let groupsOfUniqueContigousPoints = [];
+	let nextGrids = [];
+	let nextIndex = 0;
+	groupsOfUniqueContigousPoints = findAllEligibleUniquePoints(numRows,numColumns,interimGrid);
+	for (let i = 0; i < groupsOfUniqueContigousPoints.length; i++) {
+		let nextInterimGrid = [];
+		nextInterimGrid = oneIteration(groupsOfUniqueContigousPoints[i][0],groupsOfUniqueContigousPoints[i][1],numRows,numColumns,numColors,interimGrid);
+		nextGrids.push(nextInterimGrid);
+	}
+	nextIndex = findMinimumGroupsOfContiguousPoints(numRows,numColumns,nextGrids);
+	if (nextIndex >= 0) {
+		return groupsOfUniqueContigousPoints[nextIndex];
+	} else {
+		return [];
+	}
+}
+
+// find next point to get the minimum number of groups of contiguous points after two step forward.
+function findNextPointMinimumGroupsLevelTwo(numRows,numColumns,numColors,interimGrid) {     //assume interimGrid is a solvable grid and is not solved yet.
+	let nextPoint = [];
+	let nextPoint2 = [];
+	let groupsOfUniqueContigousPoints = [];
+	let groupsOfUniqueContigousPointsLevelTwo = [];
+	let nextGrids = [];
+	let nextGrids2 = [];
+	let nextIndex = 0;
+	
+	groupsOfUniqueContigousPoints = findAllEligibleUniquePoints(numRows,numColumns,interimGrid);
+	for (let i = 0; i < groupsOfUniqueContigousPoints.length; i++) {
+		let nextInterimGrid = [];
+		nextInterimGrid = oneIteration(groupsOfUniqueContigousPoints[i][0],groupsOfUniqueContigousPoints[i][1],numRows,numColumns,numColors,interimGrid);
+		nextGrids.push(nextInterimGrid);
+	}
+	
+	nextPoint = findPointsThatBringsMinimumGroupsOfContiguousPoints(numRows,numColumns,nextGrids);
+
+	for (let i = 0; i < nextPoint.length; i++) {
+		let nextInterimGrid2 = [];
+		nextInterimGrid2 = oneIteration(nextPoint[0],nextPoint[1],numRows,numColumns,numColors,nextGrids[i]);
+		nextGrids2.push(nextInterimGrid2);
+	}
+	nextPoint2 = findPointsThatBringsMinimumGroupsOfContiguousPoints(numRows,numColumns,nextGrids);
+		}
+	}
+	
+	nextIndex = findMinimumGroupsOfContiguousPoints(numRows,numColumns,nextGrids);
+	if (nextIndex >= 0) {
+		return groupsOfUniqueContigousPoints[nextIndex];
+	} else {
+		return [];
+	}
+}
+
+
+//return the point of the minimum # of groups of Contiguous Points from the input of array of grids.
+function findPointsThatBringsMinimumGroupsOfContiguousPoints(numRows,numColumns,arrayOfInterimGrid) {
+	let resultIndex = -1;
+	let minimumNumPoints = 200;
+	let points = []
+	for (let i = 0; i < arrayOfInterimGrid.length; i++) {
+		let points = findGroupsOfContiguousPoints(numRows,numColumns,arrayOfInterimGrid[i]);
+		if (points === []) {
+			return [];
+		} else {
+			NumOfContiguousPoints = points.length;
+			if ( minimumNumPoints > NumOfContiguousPoints ){
+				resultIndex = i;
+				minimumNumPoints = NumOfContiguousPoints;
+			}
+		}
+	}
+	return points[resultIndex];
+}
+
+
+//return the index of the minimum # of groups of Contiguous Points from the input of array of grids.
+function findMinimumGroupsOfContiguousPoints(numRows,numColumns,arrayOfInterimGrid) {
+	let resultIndex = -1;
+	let minimumNumPoints = 200;
+	for (let i = 0; i < arrayOfInterimGrid.length; i++) {
+		let NumOfContiguousPoints = findGroupsOfContiguousPoints(numRows,numColumns,arrayOfInterimGrid[i]).length;
+		if ( minimumNumPoints > NumOfContiguousPoints ){
+			resultIndex = i;
+			minimumNumPoints = NumOfContiguousPoints;
+		}
+	}
+	return resultIndex;
+}
+
+
+function findGroupsOfContiguousPoints(numRows,numColumns,interimGrid) {
+	let remainingPoints = [];
+	remainingPoints = findRemainingPoints(numRows,numColumns,interimGrid);
+	
+	let resultingGroupsOfPoints = [];
+	
+	for (let i = 0; i < remainingPoints.length; i++) {
+		let newPoints = [];
+		if ( IsPointInArrayOfPoints(remainingPoints[i][0],remainingPoints[i][1],resultingGroupsOfPoints) ) {
+			newPoints = Array.from(findContiguousPoints(remainingPoints[i][0],remainingPoints[i][1],numRows,numColumns,interimGrid));
+			resultingGroupsOfPoints.push(newPoints);
+		}
+	}
+	return resultingGroupsOfPoints;
+}
+
+
+function oneIteration(startPointX,startPointY,numRows,numColumns,numColors,interimGrid) {
+	let copiedGrid = arrayDeepCopy(numRows,numColumns,interimGrid);
+	
+	if(!isItEligiblePick(startPointX,startPointY,numRows,numColumns,copiedGrid)) {
+		return null;
+	} else {
+		let contiguousPoints = findContiguousPoints(startPointX,startPointY,numRows,numColumns,copiedGrid);
+		copiedGrid = deleteContiguousPoints(contiguousPoints,copiedGrid); 
+		copiedGrid = fallDown(numRows,numColumns,copiedGrid);
+		copiedGrid = removeEmptyColumns(numRows,numColumns,copiedGrid);
+		return copiedGrid;
+	}
+	return copiedGrid;
+}
+
+//given a grid, find all unique eligible points to select. includes just one unique eligible point in a contiguous set.
+function findAllEligibleUniquePoints(numRows,numColumns,interimGrid) {   
+
+	let remainingPoints = [];
+	remainingPoints = findRemainingPoints(numRows,numColumns,interimGrid);
+	//console.log("remainingPoints");
+	//console.log(remainingPoints);
+	let eligiblePoints = [];
+	for (let i = 0; i < remainingPoints.length; i++) {
+		if(isItEligiblePick(remainingPoints[i][0],remainingPoints[i][1],numRows,numColumns,interimGrid)) {
+			eligiblePoints.push(remainingPoints[i]);
+		}
+	}
+	//console.log("eligiblePoints");
+	//console.log(eligiblePoints);
+	let uniqueEliglblePoints = []   //uniqueEliglblePoints has only one unique point from Contiguous points.
+	let checkedPoints = [];
+	for (let i = 0; i < eligiblePoints.length; i++) {
+		let contiguousPoints = [];
+		if ( !IsPointInArrayOfPoints(eligiblePoints[i][0],eligiblePoints[i][1],checkedPoints) ) {       //if eligible point is not in checkedPoints.
+			let contiguousPointsSet=findContiguousPoints(eligiblePoints[i][0],eligiblePoints[i][1],numRows,numColumns,interimGrid);
+			contiguousPoints=Array.from(contiguousPointsSet);
+			checkedPoints.push(...contiguousPoints);
+			uniqueEliglblePoints.push(eligiblePoints[i]);
+		}
+	}
+	uniqueEliglblePoints = shuffle(uniqueEliglblePoints);  //reserve the order.  Bottom ones have better chance to remove more points.
+	return uniqueEliglblePoints;
+}
+
+function findLowestColumn(numRows,numColumns,interimGrid) {
+	let lowestColumn = 0;
+	let maxEmpty = 0;
+	
+	for (let j = 0; j < numColumns; j++) {
+	
+		let countEmpty = 0;
+		
+		for (let i = 0; i < numRows; i++) {
+			if(interimGrid[i][j] === '-') {
+				countEmpty += 1;
+			} else {
+				if (maxEmpty < countEmpty) {
+					lowestColumn = j;
+				}
+				break;
+			}
+		}
+	}
+	return lowestColumn;
+}
+
+
+function swap(arr, i, j) { 
+  // swaps two elements of an array in place
+  var temp = arr[i];
+  arr[i] = arr[j];
+  arr[j] = temp;
+}
+function randInt(max) { 
+  // returns random integer between 0 and max-1 inclusive.
+  return Math.floor(Math.random()*max);
+}
+function shuffle(arr) {
+  // For each slot in the array (starting at the end), 
+  // pick an element randomly from the unplaced elements and
+  // place it in the slot, exchanging places with the 
+  // element in the slot. 
+  for(var slot = arr.length - 1; slot > 0; slot--){
+    var element = randInt(slot+1);
+    swap(arr, element, slot);
+  }
+  return arr;
+}
+
+function IsPointInArrayOfPoints(pointX,pointY,arrayofPoints) {
+	for (let i = 0; i < arrayofPoints.length; i++) {
+		if (pointX === arrayofPoints[i][0] && pointY === arrayofPoints[i][1]) {
+			return true;
+		}
+	}
+	return false;
+}
+
+//check equality for 2 by 2 grids of two.
+function isSameGrid(numRows,numColumns,grid1, grid2) {  
+	//check dimenstions
+	// if (grid1.length !== grid2.length) {
+		// return false;
+	// }
+	// if (grid1[0].length !== grid2[0].length) {
+		// return false;
+	// }
+	//check each element
+	for (let i = 0; i < numRows; ++i) {
+		for (let j = 0; j < numColumns; j++) {
+			// if (i === 0 && j === 0) {
+				// console.log("grid1[i][j]: ",grid1[i][j]);
+				// console.log("grid2[i][j]: ",grid2[i][j]);
+				// console.log("grid1[i][j] !== grid2[i][j]: ",grid1[i][j] !== grid2[i][j])
+			// }
+			if (grid1[i][j] !== grid2[i][j]) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+function findIndexOfDuplicateGrids(numRows,numColumns,matchingGrid) {     // matchingGrid is array of grids.
+	let indexOfDuplicate = [];
+	for (let i = 0; i < matchingGrid.length; i++) {
+		for (let j = i + 1; j < matchingGrid.length; j++) {
+			
+			// if( i === 0 && j === 1) {
+				// console.log("in findIndexOfDuplicateGrids");
+				// console.log(matchingGrid[i]);
+				// console.log(matchingGrid[j]);
+			// }
+			
+			if ( isSameGrid(numRows,numColumns,matchingGrid[i],matchingGrid[j]) ) {
+				if (indexOfDuplicate.length === 0) {
+					indexOfDuplicate.push(j);
+				} else if (indexOfDuplicate.indexOf(j) < 0) {
+					indexOfDuplicate.push(j);
+				}
+			}
+		}
+	}
+	return indexOfDuplicate;
+}
+
+// random whole number between min and max
+const randomRange = (myMin, myMax) =>  Math.floor(Math.random() * (myMax - myMin + 1)) + myMin;
+
+// find remaining points from the interimGrid and return array of remaining points
+function findRemainingPoints(numRows,numColumns,interimGrid) {
+	let remainingPoints = [];
+	for (let i = 0; i < numRows; ++i) {
+		for (let j = 0; j < numColumns; j++) {
+			if(interimGrid[i][j] !== '-') {
+				remainingPoints.push([i,j]);
+			}
+		}
+	}
+	return remainingPoints;
+	
+}
+
+function findColorSet(numRows,numColumns,interimGrid) {
+	//console.log(interimGrid);
+	let colorArray = [];  // array [ 'B', 'R' ]
+	for (let i = 0; i < numRows; ++i) {
+		for (let j = 0; j < numColumns; j++) {
+			//console.log("i,j: ",i,j);
+			if (colorArray.length === 0) {
+				colorArray.push(interimGrid[i][j]);
+			} else if (colorArray.indexOf(interimGrid[i][j]) < 0) {
+				colorArray.push(interimGrid[i][j]);
+			}
+		}
+	}
+	//console.log(colorArray);
+	return colorArray;
+}
+
+function findContiguousPoints(pickPointRow,pickPointCol,numRows,numColumns,interimGrid) {
+	
+	var sameColorPoints = new Set();    // e.g. ending result of this would be Set { [1,1],[0,1],[1,0] }. covers all the scope in outer func.
+	
+	var OrigPickPointRow = pickPointRow;
+	var OrigPickPointCol = pickPointCol;
+	
+	let nextPointRow = pickPointRow;
+	let nextPointCol = pickPointCol;
+	
+	// add the initial point
+	//sameColorPoints.add([OrigPickPointRow,OrigPickPointCol]);
+	
+	//console.log("point location 1");
+	//console.log(pickPointRow,pickPointCol);
+	//add the adjacent points with the same color
+	const innerFindContiguousPoints = (nextPointRow,nextPointCol,numRows,numColumns,interimGrid) => {
+		
+		// currentColor
+		//console.log("testing 2");
+		//console.log(interimGrid);
+		//console.log("testing 2");
+		
+		//console.log(nextPointRow,nextPointCol);
+		let currentColor = interimGrid[nextPointRow][nextPointCol];
+		
+		let feasiblePoint = false;   // need to have at least one adjacent block with the same color to be feasible.
+		//console.log("currentColor",currentColor);
+		//add the initial point
+		
+		//console.log("point location 2");
+		//console.log(nextPointRow,nextPointCol);
+
+		// resursion stop conditions
+		
+		// empty point
+		if (interimGrid[nextPointRow][nextPointCol] === '-') {              // stop condition for recursive search
+			//console.log("location A");
+			return;
+		}
+		
+		// already has the point
+		if (nextPointRow !== OrigPickPointRow && nextPointCol !== OrigPickPointCol && hasPointAlready([nextPointRow,nextPointCol],sameColorPoints)) {				// stop if the poit is already in the solution set.
+			//console.log("location C");
+			return;
+		}
+		// different color
+		if (interimGrid[nextPointRow][nextPointCol] !== interimGrid[OrigPickPointRow][OrigPickPointCol]) {  // different color, then stop
+			//console.log("location D");
+			return;
+		}
+		
+		// add new point only.
+
+		sameColorPoints.add([nextPointRow,nextPointCol]);
+
+
+		//console.log("location E");
+		//add 'up' point if up has the same color
+		if (nextPointRow !== 0) {         //if not on the top line
+			if (interimGrid[nextPointRow-1][nextPointCol] === currentColor && !hasPointAlready([nextPointRow-1,nextPointCol],sameColorPoints)) {       //same color
+			    //console.log("location up: ", sameColorPoints);
+
+				innerFindContiguousPoints(nextPointRow-1,nextPointCol,numRows,numColumns,interimGrid);   //recursive search	
+			}	
+		}
+		//check if down is the same
+		if (nextPointRow !== numRows-1) {         //if not on the bottom line
+			if (interimGrid[nextPointRow+1][nextPointCol] === currentColor && !hasPointAlready([nextPointRow+1,nextPointCol],sameColorPoints)) {       //same color
+				//console.log("location down: ", sameColorPoints);
+				innerFindContiguousPoints(nextPointRow+1,nextPointCol,numRows,numColumns,interimGrid);   //recursive search	
+			}	
+		}
+		//check if right is the same
+		if (nextPointCol !== numColumns-1) {         //if not on the bottom line
+			if (interimGrid[nextPointRow][nextPointCol+1] === currentColor && !hasPointAlready([nextPointRow,nextPointCol+1],sameColorPoints)) {       //same color
+				//console.log("location right: ", sameColorPoints);
+				innerFindContiguousPoints(nextPointRow,nextPointCol+1,numRows,numColumns,interimGrid);   //recursive search	
+			}	
+		}	
+		//check if left is the same
+		if (nextPointCol !== 0) {         //if not on the bottom line
+			if (interimGrid[nextPointRow][nextPointCol-1] === currentColor && !hasPointAlready([nextPointRow,nextPointCol-1],sameColorPoints)) {       //same color
+				//console.log("location left: ", sameColorPoints);
+				innerFindContiguousPoints(nextPointRow,nextPointCol-1,numRows,numColumns,interimGrid);   //recursive search	
+			}	
+		}	
+	
+	}
+	
+	if (typeof nextPointRow === "number" && typeof nextPointCol === "number") {
+		innerFindContiguousPoints(nextPointRow,nextPointCol,numRows,numColumns,interimGrid);
+	} else {
+		return sameColorPoints;
+	}
+	return sameColorPoints;
+	
+}
+
+function deleteContiguousPoints(contiguousPoints,interimGrid) {
+	// if contiguousPoints is not empty
+	if (contiguousPoints.size !== 0) {
+		contiguousPoints.forEach(function(element) {
+			interimGrid[element[0]][element[1]] = '-';
+		});
+	} else {
+		return interimGrid;
+	}
+	return interimGrid;
+}
+
+function fallDown(numRows,numColumns,interimGrid) {
+	if (isSolved(numRows,numColumns,interimGrid)) {
+		return interimGrid;
+	}
+	for (let j = 0; j < numColumns; j++) {
+		for (let i = numRows - 1; i > 0; i--) {     // no fall down at the top line ( i === 0)
+			if (interimGrid[i][j] === '-') {     // fall down all points above (i,j) point
+				let numOfConsecutiveHoles = 1;
+				let moreHoles = true;       // need to check more holes above.
+				while (moreHoles) {
+					if (i - numOfConsecutiveHoles >= 0) {
+						if (interimGrid[i - numOfConsecutiveHoles][j] === '-') {
+							numOfConsecutiveHoles++;
+						} else {
+							moreHoles = false;
+						}
+					} else {
+						moreHoles = false;
+					}
+				}
+				
+				for (let k = i; k - numOfConsecutiveHoles + 1 > 0; k--) {
+					interimGrid[k][j] = interimGrid[k-numOfConsecutiveHoles][j];      // fall down from row i-1 to row i.
+					//interimGrid[k-numOfConsecutiveHoles][j] = '-';
+				}
+				for (let r = 0; r < numOfConsecutiveHoles; r++) {
+					interimGrid[r][j] = '-';                   // set the top numOfConsecutiveHoles row(s) of column j to be '-'.
+				}
+			}
+		}
+	}
+	return interimGrid;
+}
+
+function removeEmptyColumns(numRows,numColumns,interimGrid) {
+	//console.log(interimGrid);
+	if (isSolved(numRows,numColumns,interimGrid)) {
+		return interimGrid;
+	}
+	//check the bottom line only to see if that column is empty. 
+	for (let j = 0; j < numColumns; j++) {
+		let isCurrentColumnEmpty = true;
+		if (interimGrid[numRows-1][j] !== '-') {        //if any point in the bottom row is not '-', then, it's not an empty column.
+				isCurrentColumnEmpty = false;
+		}
+		
+		//if empty column
+		if (isCurrentColumnEmpty === true) {
+			//console.log("isCurrentColumnEmpty: ",isCurrentColumnEmpty);
+			//console.log(interimGrid);
+			//move the next column to the prev column starting from the empty col. (i.e. delete the empty column.)
+			for (let k = j; k < numColumns -1; k++ ) {    // until numColumns-2
+				for (let r = 0; r < numRows; r++) {
+					interimGrid[r][k] = interimGrid[r][k+1];
+				}
+			
+			}
+			// add '-' to the last column
+			for (let r = 0; r < numRows; r++) {
+					interimGrid[r][numColumns -1] = '-';
+			}
+			
+			//console.log(interimGrid);
+		}
+	}
+	//console.log(interimGrid);
+	return interimGrid;
+}
+
+function isSolved(numRows,numColumns,interimGrid) {
+	let result = false;
+	
+	//console.log(interimGrid);
+	let colorArray = [];  // array [ 'B', 'R' ]
+	colorArray = findColorSet(numRows,numColumns,interimGrid);
+	
+	if (colorArray.length === 1 && colorArray[0] === '-') {
+		result = true;
+	}
+	
+	return result;
+}
+
+function NotSolvable(numRows,numColumns,interimGrid,numColors) {
+	let result = false;
+	
+	let colorArray = [];  // array [ 'B', 'R' ]
+	colorArray = findColorSet(numRows,numColumns,interimGrid);
+	
+	// only one point remaining for any color.
+	for (let i = 0; i < colorArray.length; i++) {
+		let color = colorArray[i];
+		if (color !== '-' && countEachColor(color, numRows,numColumns,interimGrid) === 1) {
+			result = true;
+			return result;
+		}
+		
+	}
+	return result;
+}
+
+function countEachColor(color, numRows,numColumns,interimGrid) {
+	let totalNum = 0;
+	for (let i = 0; i < numRows; ++i) {
+		for (let j = 0; j < numColumns; j++) {
+			if (interimGrid[i][j] === color && color !== '-') {
+				totalNum++;
+			}
+		}
+	}
+	return totalNum;
+}
+
+function hasPointAlready([nextPointRow,nextPointCol], setOfPoints) {
+	result = false;
+	//console.log("before printing setOfPoints");
+	//console.log(setOfPoints);
+	//console.log("after printing setOfPoints");
+	if (setOfPoints.size === 0) {
+		result = false;
+		return result;
+	}
+	let arrayOfPoints = Array.from(setOfPoints);
+	
+	//console.log("before printing arrayOfPoints");
+	//console.log(arrayOfPoints);
+	//console.log("after printing arrayOfPoints");
+	//console.log(arrayOfPoints.length);
+	
+	for (let i = 0; i < arrayOfPoints.length; i++) {
+		if (arrayOfPoints[i][0] === nextPointRow && arrayOfPoints[i][1] === nextPointCol) {
+			result = true;
+			return result;
+		}
+	}
+	return result;
+}
+
+// deep copy two dimensional array
+function arrayDeepCopy(numRows,numColumns,interimGrid) {
+	let newArray = Create2DArray(numRows);
+	for (let i = 0; i < numRows; ++i) {
+		for (let j = 0; j < numColumns; j++) {
+				newArray[i][j] = interimGrid[i][j];
+		}
+	}
+	return newArray;
+}
+
+function Create2DArray(rows) {
+  var arr = [];
+
+  for (var i=0;i<rows;i++) {
+     arr[i] = [];
+  }
+
+  return arr;
+}
+
+function isItEligiblePick(pickPointRow,pickPointCol,numRows,numColumns,interimGrid) {
+	let result = false;
+	
+	let currentColor = interimGrid[pickPointRow][pickPointCol];
+	
+	//console.log("currentColor");
+	//console.log(currentColor);
+	
+	//console.log(interimGrid[pickPointRow-1][pickPointCol]);
+	
+	if (interimGrid[pickPointRow][pickPointCol] === '-') {
+		return false;
+	}
+	if (pickPointRow !== 0 && interimGrid[pickPointRow-1][pickPointCol] === currentColor) {
+			return true;
+		
+	} else if (pickPointRow !== numRows - 1 && interimGrid[pickPointRow+1][pickPointCol] === currentColor) {
+			return true;
+		
+	} else if (pickPointCol !== numColumns - 1 && interimGrid[pickPointRow][pickPointCol+1] === currentColor) {
+			return true;
+		
+	} else if (pickPointCol !== 0 && interimGrid[pickPointRow][pickPointCol-1] === currentColor) {
+			return true;
+	}
+	return result;
+}
+
+
+
+
+// process.stdin.resume();
+// process.stdin.setEncoding("ascii");
+// _input = "";
+// process.stdin.on("data", function (input) {
+    // _input += input;
+// });
+
+// process.stdin.on("end", function () {
+   // processData(_input);
+// });
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en"> 
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+ </head>
+<body>
+
+<script type="text/javascript">
+
+
+
+function frankenSplice(arr1, arr2, n) {
+  let newArr2Front = arr2.slice(0,n);
+  let newArr2End = arr2.slice(n,arr2.length);
+  //console.log(newArr2Front);
+  //console.log(newArr2End);
+
+  for (let i = 0; i < arr1.length; i++) {
+    newArr2Front.push(arr1[i]);
+  }
+  for (let i = 0; i < newArr2End.length; i++) {
+    newArr2Front.push(newArr2End[i]);
+  }
+  //console.log(newArr2Front);
+  //console.log(newArr2End);
+
+  return newArr2Front;
+}
+
+frankenSplice([1, 2, 3], [4, 5, 6], 1);
+
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en"> 
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+ </head>
+<body>
+
+<script type="text/javascript">
+
+
+function bouncer(arr) {
+  let newArr = arr.slice();
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if ( Boolean(arr[i]) == false ) {
+      newArr.splice(i,1);
+    }
+  }
+  console.log(newArr);
+  return newArr;
+}
+
+bouncer([7, "ate", "", false, 9]);
+
+
+</script>
+
+</body>
+</html>

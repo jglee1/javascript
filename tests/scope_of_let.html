@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en"> 
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+ </head>
+<body>
+
+<script type="text/javascript">
+
+
+function checkScope() {
+"use strict";
+  let i = "function scope";
+  let flag = true;
+  while (flag) {
+    i = "block scope";
+    console.log("Block scope i is: ", i);
+	flag = false;
+  }
+  console.log("Function scope i is: ", i);
+  return i;
+}
+
+console.log(checkScope());
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en"> 
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+ </head>
+<body>
+
+<script type="text/javascript">
+
+
+
+var input = 
+`2 0 -1
+1
+10`;
+
+processData(input);
+
+//console.log(isPrime(5));
+//console.log(isPrime(6));
+//console.log(isPrime(7));
+//console.log(isPrime(8));
+//console.log(isPrime(9));
+//console.log(isPrime(10));
+//console.log(isPrime(11));
+//console.log(isPrime(71));
+//console.log(num,isPrimeMillerRabin(num));
+
+
+//num = 19;//7723;
+//maxIteration = 3;
+
+//console.log(isPrimeMillerRabinProbabilistic(num, maxIteration));
+
+
+
+function processData(input) {
+	
+	//Problem 216 from projecteuler.net
+	
+    let lines = input.split('\n');
+	let firstLine = lines[0].split(" ");
+    const aVar = parseInt(firstLine[0]);
+	const bVar = parseInt(firstLine[1]);
+	const cVar = parseInt(firstLine[2]);
+	const numQueries = parseInt(lines[1]);
+	let upperBoundArray = [];
+	let primeNumbers = [];
+	
+	for (let i = 0; i < numQueries; i++) {
+		upperBoundArray.push(parseInt(lines[i+2]));
+	}
+	
+	for (let i = 0; i < numQueries; i++) {
+		let upperBound = upperBoundArray[i];
+		let [primeNumbersPerQuery,candidateNumbersPerQuery] = findPrimeNumbers(aVar, bVar, cVar, upperBound);
+		primeNumbers.push(primeNumbersPerQuery);
+		//console.log(candidateNumbersPerQuery);
+		//console.log(primeNumbersPerQuery);
+		console.log(primeNumbersPerQuery.length);
+	}
+} 
+
+
+
+function findPrimeNumbers(aVar, bVar, cVar, upperBound) {
+	let primenumbers = [];
+	let candidateNumbers = [];
+	for (let i = 0; i <= upperBound; i++) {
+		let polynomialValue = polynomialCal (i, aVar, bVar, cVar);
+		candidateNumbers.push(polynomialValue);
+		//console.log("upperBound");
+		//console.log(upperBound);
+		//console.log("polynomialValue");
+		//console.log(polynomialValue);
+		if ( isPrimeSimple(polynomialValue) ) {
+			primenumbers.push(polynomialValue);
+		}
+	}
+	return [primenumbers,candidateNumbers];
+}
+
+
+function polynomialCal (num, aVar, bVar, cVar) {
+		return aVar*num*num + bVar*num + cVar;
+}
+
+function isPrimeMillerRabinProbabilisticBigInt(number, maxIteration) {
+	let num = BigInt(number);
+	console.log(num);
+	if (number < 2) {
+		return false;
+	} else if (number === 2 || number === 3) {
+		return true;
+	} else if (number % 2 === 0 || number % 3 === 0) {
+		return false;
+	} else if (number % 6 !== 1 && number % 6 !== 5) {
+		return false;
+	} else {
+		let powerOf2 = factorOut2BigInt(num-1n);
+		let dNum = (num - 1n) / Math.pow(2n,powerOf2);
+		let count = 0;
+		let compositeFlag = false;        //this flag indicates the compositeness of the given number.
+		while (count < maxIteration && compositeFlag === false) {
+			count++;
+			let randInt = getRandomInt(2, num);
+			randInt = BigInt(randInt);
+			let x = Math.pow(randInt,dNum)%num;       //may need to change to BigInt to deal with number > 2 ** 53.
+			if (Number(x) !== 1 && Number(x) !== number-1) {
+				for (let s = 1; s < Number(powerOf2); s++) {    // for s = 1, ... , r-1.
+					x = (x * x)%num;
+					if ( Number(x) !== number-1) {
+						compositeFlag = true;
+					}
+				}
+			}
+		}
+		if (compositeFlag === true) {
+			return false;
+		} else {
+			return true;
+		}
+		
+	}
+}
+
+
+
+function isPrimeMillerRabinProbabilistic(num, maxIteration) {
+	if (num < 2) {
+		return false;
+	} else if (num === 2 || num === 3) {
+		return true;
+	} else if (num % 2 === 0 || num % 3 === 0) {
+		return false;
+	} else if (num % 6 !== 1 && num % 6 !== 5) {
+		return false;
+	} else {
+		let powerOf2 = factorOut2(num-1);
+		let dNum = (num - 1) / Math.pow(2,powerOf2);
+		let count = 0;
+		let compositeFlag = false;        //this flag indicates the compositeness of the given number.
+		while (count < maxIteration && compositeFlag === false) {
+			count++;
+			let randInt = getRandomInt(2, num);
+			let x = Math.pow(randInt,dNum)%num;       //may need to change to BigInt to deal with number > 2 ** 53.
+			if (x !== 1 && x !== num-1) {
+				for (let s = 1; s < powerOf2; s++) {    // for s = 1, ... , r-1.
+					x = (x * x)%num;
+					if ( x !== num-1) {
+						compositeFlag = true;
+					}
+				}
+			}
+		}
+		if (compositeFlag === true) {
+			return false;
+		} else {
+			return true;
+		}
+		
+	}
+}
+
+
+
+
+function isPrimeMillerRabin(num) {
+	let baseArray = [2,3,5,7,11,13,17,19,23,29,31]  // enough to test up to 2^64 ~= 18 billion * billion.
+	if (num < 2) {
+		return false;
+	} else if (num === 2 || num === 3) {
+		return true;
+	} else if (num % 2 === 0 || num % 3 === 0) {
+		return false;
+	} else if (num % 6 !== 1 && num % 6 !== 5) {
+		return false;
+	} else {
+		console.log("location 1");
+		let powerOf2 = factorOut2(num-1);
+		console.log("location 2");
+		console.log(powerOf2);
+		let dNum = (num - 1) / Math.pow(2,powerOf2);
+		console.log("dNum: ", dNum);
+		let maxBase = Math.min(num-1,2*Math.pow(Math.log(num),2));
+		console.log("maxBase: ", maxBase);
+		let ConditionForComposite = []; 
+		for (let i = 0; i <= baseArray.length && baseArray[i] < maxBase; i++) {
+			let checkNumOne = Math.pow(baseArray[i],dNum)%num;
+			console.log("location 3");
+			console.log("baseArray[i]",baseArray[i]);
+			console.log("dNum: ", dNum);
+			console.log("checkNumOne: ",checkNumOne);
+			if ( checkNumOne%num !== 1) {
+				for (let s = 0; s < powerOf2; s++) {
+					let checkNumTwo = Math.pow(baseArray[i],Math.pow(2,s)*dNum);
+					console.log("location 4");
+					console.log("checkNumTwo: ",checkNumTwo);
+					if (checkNumTwo === num - 1) {
+						console.log("tested as no prime");
+						console.log("num: ", num);
+						console.log("powerOf2",powerOf2);
+						console.log("dNum: ", dNum);
+						console.log("baseArray[i]: ", baseArray[i]);
+						console.log("s: ", s);
+						console.log("checkNumOne: ",checkNumOne);
+						console.log("checkNumTwo: ",checkNumTwo);					
+					} else {
+					}
+				}
+			let countResult = 0;
+				for (let s = 0; s < powerOf2; s++) {
+					if (secondConditionForComposite[s] === true) {
+						countResult++;
+					}
+				}
+				if (countResult === powerOf2) {
+					return false;
+				}
+					
+			}
+		}
+	}
+	return true;
+}
+
+
+function factorOut2BigInt(number) {
+	let num = BigInt(number);
+	let countFactorOf2 = 0n;
+	if (num ===2n) {
+		return 1n;
+	}
+	while (num%2n === 0n) {
+		num = num/2n;
+		countFactorOf2++;
+	}
+	return countFactorOf2;
+}
+
+function factorOut2(num) {
+	let countFactorOf2 = 0;
+	if (num ===2) {
+		return 1;
+	}
+	while (num%2 === 0) {
+		num = num/2;
+		countFactorOf2++;
+	}
+	return countFactorOf2;
+}
+
+function isPrimeSimple(num) {
+	if (num < 2) {
+		return false;
+	} else if (num === 2 || num === 3) {
+		return true;
+	} else if (num % 2 === 0 || num % 3 === 0) {
+		return false;
+	} else if (num % 6 !== 1 && num % 6 !== 5) {
+		return false;
+	} else {
+		for (let i = 5; i <= Math.floor(Math.sqrt(num)); i++) {     //check 6k + 1 and 6k-1 only.
+			if (num % i === 0) {
+				//console.log("divisor: ", i);
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+/**
+ * Returns a random integer between min (inclusive) and max (inclusive)
+ * Using Math.round() will give you a non-uniform distribution!
+ */
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en"> 
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+ </head>
+<body>
+
+<script type="text/javascript">
+
+function getIndexToIns(arr, num) {
+  let newArr = arr.sort( (a,b) => a-b );
+  //console.log(newArr);
+  let locationToFill = 0;
+  for (let i = 0; i < newArr.length; i++) {
+	if (newArr[i] < num) {
+		locationToFill = i+1;
+	}
+  }
+  console.log(locationToFill);
+  return locationToFill;
+}
+
+getIndexToIns([40, 60], 50);
+
+getIndexToIns([5, 40, 60], 50);
+
+
+</script>
+
+</body>
+</html>

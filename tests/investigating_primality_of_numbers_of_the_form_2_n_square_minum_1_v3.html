@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en"> 
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+ </head>
+<body>
+
+<script type="text/javascript">
+
+
+
+var input = 
+`2 0 -1
+1
+10`;
+
+//  processData(input);
+
+//console.log(isPrime(5));
+//console.log(isPrime(6));
+//console.log(isPrime(7));
+//console.log(isPrime(8));
+//console.log(isPrime(9));
+//console.log(isPrime(10));
+//console.log(isPrime(11));
+console.log(isPrime(71));
+
+function processData(input) {
+	
+	//Problem 216 from projecteuler.net
+	
+    let lines = input.split('\n');
+	let firstLine = lines[0].split(" ");
+    const aVar = parseInt(firstLine[0]);
+	const bVar = parseInt(firstLine[1]);
+	const cVar = parseInt(firstLine[2]);
+	const numQueries = parseInt(lines[1]);
+	let upperBoundArray = [];
+	let primeNumbers = [];
+	
+	const NUM_CHECK_PRIME = 1000;
+	
+	for (let i = 0; i < numQueries; i++) {
+		upperBoundArray.push(parseInt(lines[i+2]));
+	}
+	
+	for (let i = 0; i < numQueries; i++) {
+		let upperBound = upperBoundArray[i];
+		let [primeNumbersPerQuery,candidateNumbersPerQuery] = findPrimeNumbers(aVar, bVar, cVar, upperBound);
+		primeNumbers.push(primeNumbersPerQuery, NUM_CHECK_PRIME);
+		console.log(candidateNumbersPerQuery);
+		console.log(primeNumbersPerQuery);
+		console.log(primeNumbers[i]);
+	}
+	
+} 
+
+
+
+function findPrimeNumbers(aVar, bVar, cVar, upperBound, maxNumCheck) {
+	let primenumbers = [];
+	let candidateNumbers = [];
+	for (let i = 0; i <= upperBound; i++) {
+		let polynomialValue = polynomialCal (i, aVar, bVar, cVar);
+		candidateNumbers.push(polynomialValue);
+		//console.log("upperBound");
+		//console.log(upperBound);
+		//console.log("polynomialValue");
+		//console.log(polynomialValue);
+		if ( isPrime(polynomialValue,maxNumCheck) ) {
+			primenumbers.push(polynomialValue);
+		}
+	}
+	return [primenumbers,candidateNumbers];
+}
+
+
+function polynomialCal (num, aVar, bVar, cVar) {
+		return aVar*num*num + bVar*num + cVar;
+}
+
+
+// Solovay-Strassen primality test.
+ function isPrime(num, maxNumCheck) {
+
+	if (num < 2) {
+		return false;
+	}
+	if (num === 2 || num === 3) {
+		return true;
+	}
+	if (num%2 === 0) {
+		return false;
+	}
+
+//	for (let i = 0; i < maxNumCheck; i++) {
+//		let randomInt = getRandomInt(2, num - 1);
+//		if( Math.pow(randomInt,num-1)%num !==1 ) {
+//			return false;
+//		}
+//	}
+	
+	for (let i = 2; i < Math.floor((num-1)/2); i++) {
+		if( Math.pow(i,num-1)%num !==1 ) {
+			console.log(num);
+			console.log(i);
+			console.log(Math.pow(i,num-1));
+			console.log(Math.pow(i,num-1)%num);
+			
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+/**
+ * Returns a random integer between min (inclusive) and max (inclusive)
+ * Using Math.round() will give you a non-uniform distribution!
+ */
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+
+</script>
+
+</body>
+</html>
